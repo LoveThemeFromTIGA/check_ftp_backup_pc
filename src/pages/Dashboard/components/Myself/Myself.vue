@@ -21,7 +21,11 @@
       label="文件大小">
       <template slot-scope="scope">
           <!--scope.row.xxxx 会自动帮忙for循环-->
-        <span style="margin-left: 10px">{{ scope.row.current_file_size}}</span>
+        <!--<span style="margin-left: 10px">{{ scope.row.current_file_size}}</span>-->
+        <!--<span style="margin-left: 10px" v-if="scope.row.current_file_size <= 1024*1024 && scope.row.current_file_size > 1024">{{scope.row.current_file_size/1024}}K</span>-->
+        <span style="margin-left: 10px" >{{scope.row.current_file_size | transition_num}}</span>
+        <!--<span style="margin-left: 10px" v-if="scope.row.current_file_size > 1024*1024*1024 ">{{ scope.row.current_file_size/1024/1024}}G</span>-->
+
       </template>
     </el-table-column>
     <el-table-column
@@ -79,6 +83,7 @@
           running: 1,
           failed: 2,
           current_status_text: '',
+          current_file_size: ''
       }
     },
     methods: {
@@ -88,16 +93,36 @@
       handleDelete(index, row) {
         console.log(index, row);
       },
+
     },
     mounted(){
-        this.$axios.get(this.$settings.host+"/data/current/").then(response=>{
+        this.$axios.get(this.$settings.host+"/data/current_status/").then(response=>{
             this.tableData = response.data
         }).catch(error=>{
             console.log(error.response);
         })
     },
     computed: {
+    },
+    filters: {
+        transition_num: function(num){
+            if (num <= 1024){
+                let trasn_num = num + 'B';
+                return trasn_num
+            } else if (num <= 1024*1024 && num > 1024){
+                let trasn_num = (num/1024).toFixed(2) + 'K';
+                return trasn_num
+            } else if (num <= 1024*1024*1024 && num > 1024*1024){
+                let trasn_num = (num/1024/1024).toFixed(2) + 'M';
+                return trasn_num
+            } else if (num > 1024*1024*1024){
+                let trasn_num = (num/1024/1024/1024).toFixed(2) + 'G';
+                return trasn_num
+            }
+
+      }
     }
+
   }
 </script>
 
