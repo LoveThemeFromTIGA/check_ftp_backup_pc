@@ -66,7 +66,14 @@
     <el-pagination class="paginations"
       background
       layout="prev, pager, next"
-      :total="50">
+      :total="total"
+      :page-size="page_size"
+      :current-page="current_page"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      @prev-click="handlePrevClick"
+      @next-click="handleNextClick"
+    >
     </el-pagination>
         </div>
 
@@ -83,7 +90,15 @@
           running: 1,
           failed: 2,
           current_status_text: '',
-          current_file_size: ''
+          current_file_size: '',
+
+          page_size: 10,    //每一页的数据量
+          current_page: 1,  //当前页码
+          next: '',
+          previous: '',
+          count: 1,
+          total: 12
+
       }
     },
     methods: {
@@ -93,11 +108,45 @@
       handleDelete(index, row) {
         console.log(index, row);
       },
+      handleSizeChange(val) {
+        console.log(`每页 ${val} 条`);
+      },
+      handleCurrentChange(val) {
+        console.log(`当前页: ${val}`);
+        this.current_page=val;
+        this.$axios.get(this.$settings.host+"/data/current_status/?" + 'page='+ this.current_page + '&' + 'page_size=10').then(response=>{
+            this.tableData = response.data.results;
+          this.next = response.data.next;
+          this.previous = response.data.previous;
+          })
+      },
+      handlePrevClick(){
+          // 点击上一页
+          this.$axios.get(this.previous).then(response=>{
+              this.tableData = response.data.results;
+              this.next = response.data.next;
+              this.previous = response.data.previous;
+          })
+
+      },
+      handleNextClick(){
+          // 点击下一页
+          this.$axios.get(this.next).then(response=>{
+              this.tableData = response.data.results;
+              this.next = response.data.next;
+              this.previous = response.data.previous;
+          })
+
+      },
 
     },
     mounted(){
-        this.$axios.get(this.$settings.host+"/data/current_status/").then(response=>{
-            this.tableData = response.data
+        this.$axios.get(this.$settings.host+"/data/current_status/?page_size=10").then(response=>{
+            this.tableData = response.data.results;
+            this.total = response.data.count;
+            this.previous = response.data.previous;
+            this.next = response.data.next;
+
         }).catch(error=>{
             console.log(error.response);
         })
